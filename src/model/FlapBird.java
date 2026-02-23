@@ -4,10 +4,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.Objects;
 import javax.sound.sampled.*;
-
-
 import javax.swing.*;
 
 import static constants.Constants.*;
@@ -22,46 +20,21 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
     Image canocimaimage;
 
     // Configurações iniciais do Pássaro
-    double passaroX = LARGURA_TELA/ 8;
-    double passaroY = ALTURA_TELA/2;
-    double passaroLargura = 34;
-    double passaroAltura = 24;
-
-    // Configurações iniciais dos Canos
-    double canox = LARGURA_TELA;
-    double canoy = 0;
-    double canolargura = 64;
-    double canoaltura = 512;
+    double passaroX = (double) LARGURA_TELA /8;
+    double passaroY = (double) ALTURA_TELA /2;
 
 
-    private Passaro passaro = new Passaro(passaroX, passaroY, passaroLargura, passaroAltura);
-//    private Cano cano = new Cano(canox, canoy, canolargura, canoaltura);
-
-    // Classe interna que representa o objeto Cano
-//    public class cano {
-//        double x = canox;
-//        double y = canoy;
-//        double largura = canolargura;
-//        double altura = canoaltura;
-//        Image img;
-//        boolean passed = false;
-//
-//        cano(Image img) {
-//            this.img = img;
-//        }
-//    }
-
+    private final Passaro passaro = new Passaro(passaroX, passaroY, LARGURA_PASSARO, ALTURA_PASSARO);
 
     // Variáveis de Física e Estado do Jogo
-    double velocidadeX = -5; // Aumentado para deixar o jogo mais rápido
     double velocidadeY = 0;
-    double gravidade = 0.5; // Gravidade ajustada para ficar mais suave
     double pontuacao = 0;
     boolean gameOver = false;
     boolean gameStarted = false;
+    double gravidade;
+
 
     // Objetos de controle (Timers, Listas, Sons)
-    Random random = new Random();
     ArrayList<Cano> canos;
     Timer Gameloop;
     Timer colocarCanoTimer;
@@ -79,10 +52,10 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
 
         // Proteção contra erro de carregamento de imagem (Evita tela branca)
         try {
-            passaroimage = new ImageIcon(getClass().getResource("../assets/flappybird.png")).getImage();
-            fundoimage = new ImageIcon(getClass().getResource("../assets/flappybirdbg.png")).getImage();
-            canobaixoimage = new ImageIcon(getClass().getResource("../assets/bottompipe.png")).getImage();
-            canocimaimage = new ImageIcon(getClass().getResource("../assets/toppipe.png")).getImage();
+            passaroimage = new ImageIcon(Objects.requireNonNull(getClass().getResource("../assets/flappybird.png"))).getImage();
+            fundoimage = new ImageIcon(Objects.requireNonNull(getClass().getResource("../assets/flappybirdbg.png"))).getImage();
+            canobaixoimage = new ImageIcon(Objects.requireNonNull(getClass().getResource("../assets/bottompipe.png"))).getImage();
+            canocimaimage = new ImageIcon(Objects.requireNonNull(getClass().getResource("../assets/toppipe.png"))).getImage();
         } catch (Exception e) {
             System.out.println("Erro ao carregar imagens: " + e.getMessage());
         }
@@ -94,7 +67,6 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
 
         passaro.setImg(passaroimage);
         canos = new ArrayList<>();
-        gameStarted = false; // Garante que o jogo comece parado
 
         colocarCanoTimer = new Timer(1000, new ActionListener() { // Ajustado para 1000ms para acompanhar a velocidade mais rápida
             @Override
@@ -102,7 +74,6 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
                 colocarcano();
             }
         });
-        // colocarCanoTimer.start(); // Removido: O jogo começa parado esperando o Start
 
         // Timer principal do jogo (Game Loop) - roda a aprox. 60 FPS
         Gameloop = new Timer(1000/60, this);
@@ -112,15 +83,15 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
     public void colocarcano(){
         // Define uma posição aleatória para o cano de cima
         // O cano tem 512px. Vamos esconder uma parte dele para cima (negativo)
-        double randomY = (0 - canoaltura/4 - Math.random()*(canoaltura/2));
-        double espaco = ALTURA_TELA/4; // Espaço entre os canos (1/4 da tela)
+        double randomY = (0 - (double) ALTURA_CANO /4 - Math.random()*((double) ALTURA_CANO /2));
+        double espaco = (double) ALTURA_TELA /4; // Espaço entre os canos (1/4 da tela)
 
-        Cano canoCima = new Cano(canox, canoy, canolargura, canoaltura, canocimaimage);
+        Cano canoCima = new Cano(CANO_X, CANO_Y, LARGURA_CANO, ALTURA_CANO, canocimaimage);
         canoCima.setY(randomY);
         canos.add(canoCima); // Adiciona o cano na lista para ser desenhado
 
-        Cano canoBaixo = new Cano(canox, canoy, canolargura, canoaltura, canobaixoimage);
-        canoBaixo.setY(randomY + canoaltura + espaco);
+        Cano canoBaixo = new Cano(CANO_X, CANO_Y, LARGURA_CANO, ALTURA_CANO, canobaixoimage);
+        canoBaixo.setY(randomY + ALTURA_CANO + espaco);
         canos.add(canoBaixo);
     }
 
@@ -135,10 +106,10 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
         draw(g);
     }
 
-    // Método para carregar o som uma única vez
+    // Métodoo para carregar o som uma única vez
     public Clip carregarSom(String nomeArquivo) {
         try {
-            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource(nomeArquivo));
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(Objects.requireNonNull(getClass().getResource(nomeArquivo)));
             Clip clip = AudioSystem.getClip();
             clip.open(audioInputStream);
             FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
@@ -149,7 +120,7 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    // Método que gera o som de pulo matematicamente (Sintetizador simples)
+    // Métodoo que gera o som de pulo matematicamente (Sintetizador simples)
     public Clip criarSomPulo() {
         try {
             AudioFormat format = new AudioFormat(44100, 8, 1, true, true);
@@ -171,7 +142,7 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
             clip.open(format, dados, 0, dados.length);
             return clip;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Erro capturado: " + e);
             return null;
         }
     }
@@ -273,7 +244,7 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
 
         // Move os canos para a esquerda
         for (Cano c : canos) {
-            c.setX(c.getX() + velocidadeX);
+            c.setX(c.getX() + VELOCIDADE_X);
 
             // Verifica se o pássaro passou pelo cano para pontuar
             if (!c.isPassed() && passaro.getX() > c.getX() + c.getLargura()) {
@@ -284,6 +255,9 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
 
             // Detecção de Colisão
             if (colisao(passaro, c)) {
+                for (Cano cx : canos) {
+                    cx.setX(0);
+                }
                 gameOver = true;
                 tocarSom(clipBatida, 200000); // Ajustado para 0.2s (evita cortar o som se for curto)
             }
@@ -316,8 +290,10 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
                 colocarCanoTimer.start();
                 velocidadeY = -9; // Pulo mais suave
                 tocarSom(clipPulo);
+                gravidade = 0.5;
             } else if (gameOver) {
                 // Reiniciar o jogo
+                gravidade = 0;
                 passaro.setY(passaroY);
                 velocidadeY = 0;
                 canos.clear();
