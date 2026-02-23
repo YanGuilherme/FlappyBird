@@ -3,3 +3,6 @@ bin/
 *.jar
 .vscode/
 .DS_Store
+.settings/
+*.user
+/.idea/

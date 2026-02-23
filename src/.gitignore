@@ -1,6 +1,0 @@
-bin/
-*.class
-*.jar
-.vscode/
-.settings/
-*.user

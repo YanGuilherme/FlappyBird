@@ -1,3 +1,5 @@
+import model.FlapBird;
+
 import javax.swing.*;
 
 public class App {
@@ -13,8 +15,8 @@ public class App {
         janela.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
 
-        flapbird flapbird = new flapbird();
-        janela.add(flapbird);
+        FlapBird Flapbird = new FlapBird();
+        janela.add(Flapbird);
         janela.pack();
         janela.setVisible(true);
     }

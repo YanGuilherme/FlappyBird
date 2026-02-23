@@ -1,17 +1,18 @@
+package model;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Random;
-import java.io.File;
 import javax.sound.sampled.*;
 
 import javax.swing.*;
-public class flapbird extends JPanel implements ActionListener, KeyListener {
+public class FlapBird extends JPanel implements ActionListener, KeyListener {
     // Dimensões da tela do jogo
     int largura = 360;
     int altura = 640;
-    
+
     // Variáveis para armazenar as imagens
     Image passaroimage;
     Image fundoimage;
@@ -56,7 +57,7 @@ public class flapbird extends JPanel implements ActionListener, KeyListener {
         cano(Image img) {
             this.img = img;
         }
-    } 
+    }
 
     // Variáveis de Física e Estado do Jogo
     double velocidadeX = -5; // Aumentado para deixar o jogo mais rápido
@@ -72,24 +73,24 @@ public class flapbird extends JPanel implements ActionListener, KeyListener {
     Timer Gameloop;
     Timer colocarCanoTimer;
     passaro Passaro;
-    
+
     // Clips de áudio pré-carregados
     Clip clipPulo;
     Clip clipPontuacao;
     Clip clipBatida;
 
     // Construtor: Configura o painel e carrega recursos
-    flapbird(){
+    public FlapBird(){
         setPreferredSize(new Dimension(largura, altura));
         setFocusable(true); // Permite que o painel receba foco do teclado
         addKeyListener(this); // Adiciona o "ouvinte" de teclas
 
         // Proteção contra erro de carregamento de imagem (Evita tela branca)
         try {
-            passaroimage = new ImageIcon(getClass().getResource("./flappybird.png")).getImage();
-            fundoimage = new ImageIcon(getClass().getResource("./flappybirdbg.png")).getImage();
-            canobaixoimage = new ImageIcon(getClass().getResource("./bottompipe.png")).getImage();
-            canocimaimage = new ImageIcon(getClass().getResource("./toppipe.png")).getImage();
+            passaroimage = new ImageIcon(getClass().getResource("assets/flappybird.png")).getImage();
+            fundoimage = new ImageIcon(getClass().getResource("assets/flappybirdbg.png")).getImage();
+            canobaixoimage = new ImageIcon(getClass().getResource("assets/bottompipe.png")).getImage();
+            canocimaimage = new ImageIcon(getClass().getResource("assets/toppipe.png")).getImage();
         } catch (Exception e) {
             System.out.println("Erro ao carregar imagens: " + e.getMessage());
         }
@@ -97,12 +98,12 @@ public class flapbird extends JPanel implements ActionListener, KeyListener {
         // Carregar sons na memória ao iniciar o jogo (evita lag)
         clipPulo = criarSomPulo(); // Gera o som via código em vez de carregar arquivo
         clipPontuacao = carregarSom("./pontuacao.wav");
-        clipBatida = carregarSom("./batida.wav");
+        clipBatida = carregarSom("assets/batida.wav");
 
         Passaro = new passaro(passaroimage);
         canos = new ArrayList<>();
         gameStarted = false; // Garante que o jogo comece parado
-        
+
         colocarCanoTimer = new Timer(1000, new ActionListener() { // Ajustado para 1000ms para acompanhar a velocidade mais rápida
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -110,20 +111,20 @@ public class flapbird extends JPanel implements ActionListener, KeyListener {
             }
         });
         // colocarCanoTimer.start(); // Removido: O jogo começa parado esperando o Start
-        
+
         // Timer principal do jogo (Game Loop) - roda a aprox. 60 FPS
         Gameloop = new Timer(1000/60, this);
         Gameloop.start();
     }
-    
+
     public void colocarcano(){
         // Define uma posição aleatória para o cano de cima
         // O cano tem 512px. Vamos esconder uma parte dele para cima (negativo)
         double randomY = (0 - canoaltura/4 - Math.random()*(canoaltura/2));
         double espaco = altura/4; // Espaço entre os canos (1/4 da tela)
-    
+
         cano canocima = new cano(canocimaimage);
-        canocima.y = randomY; 
+        canocima.y = randomY;
         canos.add(canocima); // Adiciona o cano na lista para ser desenhado
 
         cano canobaixo = new cano(canobaixoimage);
@@ -161,11 +162,11 @@ public class flapbird extends JPanel implements ActionListener, KeyListener {
         try {
             AudioFormat format = new AudioFormat(44100, 8, 1, true, true);
             byte[] dados = new byte[10000]; // Duração curta (~0.2s)
-            
+
             for (int i = 0; i < dados.length; i++) {
                 // Frequência mais grave (300Hz a 600Hz) para ser menos estridente
                 double frequencia = 300 + (300.0 * i / dados.length);
-                
+
                 // Adiciona Fade-In (começo suave) e Fade-Out (final suave)
                 double fadeIn = Math.min(1.0, i / 1000.0); // Suaviza os primeiros 1000 samples
                 double fadeOut = 1.0 - ((double)i / dados.length);
@@ -310,7 +311,7 @@ public class flapbird extends JPanel implements ActionListener, KeyListener {
         // Cria retângulos para verificar a interseção
         Rectangle rectPassaro = new Rectangle((int)p.x, (int)p.y, (int)p.largura, (int)p.altura);
         Rectangle rectCano = new Rectangle((int)c.x, (int)c.y, (int)c.largura, (int)c.altura);
-        
+
         return rectPassaro.intersects(rectCano);
     }
 
