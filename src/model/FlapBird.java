@@ -7,11 +7,13 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.sound.sampled.*;
 
+
 import javax.swing.*;
+
+import static constants.Constants.*;
+
 public class FlapBird extends JPanel implements ActionListener, KeyListener {
-    // Dimensões da tela do jogo
-    int largura = 360;
-    int altura = 640;
+
 
     // Variáveis para armazenar as imagens
     Image passaroimage;
@@ -20,44 +22,35 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
     Image canocimaimage;
 
     // Configurações iniciais do Pássaro
-    double passaroX = largura/ 8;
-    double passaroY = altura/2;
+    double passaroX = LARGURA_TELA/ 8;
+    double passaroY = ALTURA_TELA/2;
     double passaroLargura = 34;
     double passaroAltura = 24;
 
-    // Classe interna que representa o objeto Pássaro
-    public class passaro {
-
-        double x = passaroX;
-        double y = passaroY;
-        double largura = passaroLargura;
-        double altura = passaroAltura;
-        Image img;
-
-        passaro(Image img) {
-            this.img = img;
-        }
-    }
-
     // Configurações iniciais dos Canos
-    double canox = largura;
+    double canox = LARGURA_TELA;
     double canoy = 0;
     double canolargura = 64;
     double canoaltura = 512;
 
-    // Classe interna que representa o objeto Cano
-    public class cano {
-        double x = canox;
-        double y = canoy;
-        double largura = canolargura;
-        double altura = canoaltura;
-        Image img;
-        boolean passed = false;
 
-        cano(Image img) {
-            this.img = img;
-        }
-    }
+    private Passaro passaro = new Passaro(passaroX, passaroY, passaroLargura, passaroAltura);
+//    private Cano cano = new Cano(canox, canoy, canolargura, canoaltura);
+
+    // Classe interna que representa o objeto Cano
+//    public class cano {
+//        double x = canox;
+//        double y = canoy;
+//        double largura = canolargura;
+//        double altura = canoaltura;
+//        Image img;
+//        boolean passed = false;
+//
+//        cano(Image img) {
+//            this.img = img;
+//        }
+//    }
+
 
     // Variáveis de Física e Estado do Jogo
     double velocidadeX = -5; // Aumentado para deixar o jogo mais rápido
@@ -69,10 +62,9 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
 
     // Objetos de controle (Timers, Listas, Sons)
     Random random = new Random();
-    ArrayList<cano> canos;
+    ArrayList<Cano> canos;
     Timer Gameloop;
     Timer colocarCanoTimer;
-    passaro Passaro;
 
     // Clips de áudio pré-carregados
     Clip clipPulo;
@@ -81,26 +73,26 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
 
     // Construtor: Configura o painel e carrega recursos
     public FlapBird(){
-        setPreferredSize(new Dimension(largura, altura));
+        setPreferredSize(new Dimension(LARGURA_TELA, ALTURA_TELA));
         setFocusable(true); // Permite que o painel receba foco do teclado
         addKeyListener(this); // Adiciona o "ouvinte" de teclas
 
         // Proteção contra erro de carregamento de imagem (Evita tela branca)
         try {
-            passaroimage = new ImageIcon(getClass().getResource("assets/flappybird.png")).getImage();
-            fundoimage = new ImageIcon(getClass().getResource("assets/flappybirdbg.png")).getImage();
-            canobaixoimage = new ImageIcon(getClass().getResource("assets/bottompipe.png")).getImage();
-            canocimaimage = new ImageIcon(getClass().getResource("assets/toppipe.png")).getImage();
+            passaroimage = new ImageIcon(getClass().getResource("../assets/flappybird.png")).getImage();
+            fundoimage = new ImageIcon(getClass().getResource("../assets/flappybirdbg.png")).getImage();
+            canobaixoimage = new ImageIcon(getClass().getResource("../assets/bottompipe.png")).getImage();
+            canocimaimage = new ImageIcon(getClass().getResource("../assets/toppipe.png")).getImage();
         } catch (Exception e) {
             System.out.println("Erro ao carregar imagens: " + e.getMessage());
         }
 
         // Carregar sons na memória ao iniciar o jogo (evita lag)
         clipPulo = criarSomPulo(); // Gera o som via código em vez de carregar arquivo
-        clipPontuacao = carregarSom("./pontuacao.wav");
-        clipBatida = carregarSom("assets/batida.wav");
+//        clipPontuacao = carregarSom("./pontuacao.wav");
+        clipBatida = carregarSom("../assets/batida.wav");
 
-        Passaro = new passaro(passaroimage);
+        passaro.setImg(passaroimage);
         canos = new ArrayList<>();
         gameStarted = false; // Garante que o jogo comece parado
 
@@ -121,15 +113,15 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
         // Define uma posição aleatória para o cano de cima
         // O cano tem 512px. Vamos esconder uma parte dele para cima (negativo)
         double randomY = (0 - canoaltura/4 - Math.random()*(canoaltura/2));
-        double espaco = altura/4; // Espaço entre os canos (1/4 da tela)
+        double espaco = ALTURA_TELA/4; // Espaço entre os canos (1/4 da tela)
 
-        cano canocima = new cano(canocimaimage);
-        canocima.y = randomY;
-        canos.add(canocima); // Adiciona o cano na lista para ser desenhado
+        Cano canoCima = new Cano(canox, canoy, canolargura, canoaltura, canocimaimage);
+        canoCima.setY(randomY);
+        canos.add(canoCima); // Adiciona o cano na lista para ser desenhado
 
-        cano canobaixo = new cano(canobaixoimage);
-        canobaixo.y = randomY + canoaltura + espaco;
-        canos.add(canobaixo);
+        Cano canoBaixo = new Cano(canox, canoy, canolargura, canoaltura, canobaixoimage);
+        canoBaixo.setY(randomY + canoaltura + espaco);
+        canos.add(canoBaixo);
     }
 
     @Override
@@ -200,53 +192,52 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
 
     // Lógica de desenho (Renderização)
     public void draw(Graphics g){
-        g.drawImage(fundoimage, 0, 0, largura, altura, null);
+        g.drawImage(fundoimage, 0, 0, LARGURA_TELA, ALTURA_TELA, null);
 
         // --- ROTAÇÃO SUAVE DO PÁSSARO ---
         Graphics2D g2d = (Graphics2D) g;
         AffineTransform oldTransform = g2d.getTransform();
-        g2d.translate(Passaro.x + Passaro.largura/2, Passaro.y + Passaro.altura/2);
+        g2d.translate(passaro.getX() + passaro.getLargura()/2, passaro.getY() + passaro.getAltura()/2);
         double rotation = Math.max(-25, Math.min(90, velocidadeY * 3)); // Rotação baseada na velocidade
         if (!gameStarted) rotation = 0; // Mantém reto na tela inicial
         g2d.rotate(Math.toRadians(rotation));
-        g2d.drawImage(Passaro.img, (int)-Passaro.largura/2, (int)-Passaro.altura/2, (int)Passaro.largura, (int)Passaro.altura, null);
+        g2d.drawImage(passaro.getImg(), (int)-passaro.getLargura()/2, (int)-passaro.getAltura()/2, (int)passaro.getLargura(), (int)passaro.getAltura(), null);
         g2d.setTransform(oldTransform);
 
         if (!gameStarted) {
             // --- TELA DE START ---
             g.setFont(new Font("Monospaced", Font.BOLD, 45));
             g.setColor(Color.BLACK);
-            g.drawString("FLAPPY BIRD", 25, altura / 3); // Sombra do título
+            g.drawString("FLAPPY BIRD", 25, ALTURA_TELA / 3); // Sombra do título
             g.setColor(Color.ORANGE);
-            g.drawString("FLAPPY BIRD", 20, altura / 3 - 5); // Título principal
+            g.drawString("FLAPPY BIRD", 20, ALTURA_TELA / 3 - 5); // Título principal
 
             g.setFont(new Font("Arial", Font.BOLD, 20));
             g.setColor(Color.WHITE);
             String msg = "Pressione ESPAÇO para começar";
             FontMetrics fm = g.getFontMetrics(); // Ajuda a centralizar o texto
-            int x = (largura - fm.stringWidth(msg)) / 2;
-            g.drawString(msg, x, altura / 2 + 80);
+            int x = (LARGURA_TELA - fm.stringWidth(msg)) / 2;
+            g.drawString(msg, x, ALTURA_TELA / 2 + 80);
 
             // Créditos do Criador
             g.setFont(new Font("Arial", Font.PLAIN, 16));
             String autor = "Feito por Alvaro Ferreira";
             fm = g.getFontMetrics();
-            int autorX = (largura - fm.stringWidth(autor)) / 2;
-            g.drawString(autor, autorX, altura - 50);
+            int autorX = (LARGURA_TELA - fm.stringWidth(autor)) / 2;
+            g.drawString(autor, autorX, ALTURA_TELA - 50);
             return; // Não desenha canos nem placar ainda
         }
 
         // Desenha todos os canos ativos
-        for (int i=0; i < canos.size(); i++){
-            cano c = canos.get(i);
-            g.drawImage(c.img, (int)c.x, (int)c.y, (int)c.largura, (int)c.altura, null);
+        for (Cano c : canos) {
+            g.drawImage(c.getImg(), (int) c.getX(), (int) c.getY(), (int) c.getLargura(), (int) c.getAltura(), null);
         }
 
         // Estilizando o placar (Centralizado com borda preta)
         String textoPontuacao = String.valueOf((int) pontuacao);
         g.setFont(new Font("Arial", Font.BOLD, 32));
         FontMetrics fm = g.getFontMetrics();
-        int textoX = (largura - fm.stringWidth(textoPontuacao)) / 2;
+        int textoX = (LARGURA_TELA - fm.stringWidth(textoPontuacao)) / 2;
         int textoY = 50;
 
         g.setColor(Color.BLACK); // Sombra/Borda
@@ -257,19 +248,19 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
         if (gameOver) {
             // Fundo escuro transparente
             g.setColor(new Color(0, 0, 0, 128));
-            g.fillRect(0, 0, largura, altura);
+            g.fillRect(0, 0, LARGURA_TELA, ALTURA_TELA);
 
             // Texto GAME OVER estilizado
             g.setFont(new Font("Monospaced", Font.BOLD, 50));
             g.setColor(Color.BLACK);
-            g.drawString("GAME OVER", 45, altura / 2); // Sombra
+            g.drawString("GAME OVER", 45, ALTURA_TELA / 2); // Sombra
             g.setColor(Color.ORANGE);
-            g.drawString("GAME OVER", 40, altura / 2 - 5); // Texto principal
+            g.drawString("GAME OVER", 40, ALTURA_TELA / 2 - 5); // Texto principal
 
             // Instrução para reiniciar
             g.setFont(new Font("Monospaced", Font.BOLD, 20));
             g.setColor(Color.WHITE);
-            g.drawString("Pressione ESPAÇO para reiniciar", 10, altura / 2 + 50);
+            g.drawString("Pressione ESPAÇO para reiniciar", 10, ALTURA_TELA / 2 + 50);
         }
     }
 
@@ -277,40 +268,39 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
     public void move() {
         // Aplica gravidade no pássaro
         velocidadeY += gravidade;
-        Passaro.y += velocidadeY;
-        Passaro.y = Math.max(Passaro.y, 0);
+        passaro.setY(passaro.getY() + velocidadeY);
+        passaro.setY(Math.max(passaro.getY(), 0));
 
         // Move os canos para a esquerda
-        for (int i = 0; i < canos.size(); i++) {
-            cano c = canos.get(i);
-            c.x += velocidadeX;
+        for (Cano c : canos) {
+            c.setX(c.getX() + velocidadeX);
 
             // Verifica se o pássaro passou pelo cano para pontuar
-            if (!c.passed && Passaro.x > c.x + c.largura) {
-                c.passed = true;
+            if (!c.isPassed() && passaro.getX() > c.getX() + c.getLargura()) {
+                c.setPassed(true);
                 pontuacao += 50; // 50 pontos por cano (x2 canos = 100 pontos)
                 tocarSom(clipPontuacao);
             }
 
             // Detecção de Colisão
-            if (colisao(Passaro, c)) {
+            if (colisao(passaro, c)) {
                 gameOver = true;
                 tocarSom(clipBatida, 200000); // Ajustado para 0.2s (evita cortar o som se for curto)
             }
         }
 
         // Game Over se cair no chão
-        if (Passaro.y > altura) {
+        if (passaro.getY() > ALTURA_TELA) {
             gameOver = true;
             tocarSom(clipBatida, 200000); // Ajustado para 0.2s
         }
     }
 
     // Verifica colisão entre dois retângulos
-    public boolean colisao(passaro p, cano c) {
+    public boolean colisao(Passaro p, Cano c) {
         // Cria retângulos para verificar a interseção
-        Rectangle rectPassaro = new Rectangle((int)p.x, (int)p.y, (int)p.largura, (int)p.altura);
-        Rectangle rectCano = new Rectangle((int)c.x, (int)c.y, (int)c.largura, (int)c.altura);
+        Rectangle rectPassaro = new Rectangle((int)p.getX(), (int)p.getY(), (int)p.getLargura(), (int)p.getAltura());
+        Rectangle rectCano = new Rectangle((int)c.getX(), (int)c.getY(), (int)c.getLargura(), (int)c.getAltura());
 
         return rectPassaro.intersects(rectCano);
     }
@@ -328,7 +318,7 @@ public class FlapBird extends JPanel implements ActionListener, KeyListener {
                 tocarSom(clipPulo);
             } else if (gameOver) {
                 // Reiniciar o jogo
-                Passaro.y = passaroY;
+                passaro.setY(passaroY);
                 velocidadeY = 0;
                 canos.clear();
                 pontuacao = 0;
